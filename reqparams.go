@@ -147,7 +147,7 @@ func ReqParamsParse(ctx context.Context, s string, reqParams ReqParams) (prompt 
 
 		switch attr {
 		case "model", "m":
-			if reqParamsTTS == nil || reqParamsRVC == nil {
+			if reqParamsTTS == nil && reqParamsRVC == nil {
 				break
 			}
 			val, lexErr := lexer.Next()
@@ -244,7 +244,7 @@ func ReqParamsParse(ctx context.Context, s string, reqParams ReqParams) (prompt 
 			reqParamsRVC.RMSMixRateSet = true
 			validAttr = true
 		case "length", "l":
-			if reqParamsMusicgen == nil || reqParamsAudiogen == nil {
+			if reqParamsMusicgen == nil && reqParamsAudiogen == nil {
 				break
 			}
 			val, lexErr := lexer.Next()
@@ -255,8 +255,8 @@ func ReqParamsParse(ctx context.Context, s string, reqParams ReqParams) (prompt 
 				reqParamsMusicgen.LengthSec, err = strconv.Atoi(val)
 				reqParamsMusicgen.LengthSecSet = true
 			} else if reqParamsAudiogen != nil {
-				reqParamsMusicgen.LengthSec, err = strconv.Atoi(val)
-				reqParamsMusicgen.LengthSecSet = true
+				reqParamsAudiogen.LengthSec, err = strconv.Atoi(val)
+				reqParamsAudiogen.LengthSecSet = true
 			}
 			if err != nil {
 				return "", fmt.Errorf("invalid length value")
