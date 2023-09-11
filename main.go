@@ -174,6 +174,10 @@ func handleMessage(ctx context.Context, update *models.Update) {
 }
 
 func telegramBotUpdateHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if update.Message == nil {
+		return
+	}
+
 	if update.Message.Document != nil {
 		handleAudio(ctx, update, update.Message.Document.FileID, update.Message.Document.FileName)
 	} else if update.Message.Voice != nil {
