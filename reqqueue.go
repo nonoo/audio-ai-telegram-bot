@@ -220,6 +220,8 @@ func (q *ReqQueue) processQueueEntry(processCtx context.Context, qEntry *ReqQueu
 			return err
 		}
 
+		defer tts.CleanupOutputFiles()
+
 		err = upload.Voice(q.ctx, q.currentEntry.entry, reader, true)
 		if err != nil {
 			return err

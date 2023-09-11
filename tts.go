@@ -29,26 +29,31 @@ func (t *TTS) ListModels(ctx context.Context, msg *models.Message) {
 	_ = editReplyToMessage(ctx, msg, "👅 Available models:\n\n"+string(output))
 }
 
-func (t *TTS) TTS(ctx context.Context, reqParams ReqParamsTTS, prompt string) (io.ReadCloser, error) {
+func (t *TTS) CleanupOutputFiles() {
 	os.Remove(TTSOutFilePath)
+}
+
+func (t *TTS) TTS(ctx context.Context, reqParams ReqParamsTTS, prompt string) (io.ReadCloser, error) {
+	t.CleanupOutputFiles()
+
 	cmd := NewCommand(ctx, params.TTSBin, "--model_name", reqParams.Model, "--out_path", TTSOutFilePath)
 	cmd.Dir = path.Dir(params.TTSBin)
 	cmd.Stdin = strings.NewReader(prompt)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		os.Remove(TTSOutFilePath)
+		t.CleanupOutputFiles()
 		return nil, fmt.Errorf("TTS error: %w: %s", err, string(output))
 	}
 
 	// Check output .wav file
 	if stat, err := os.Stat(TTSOutFilePath); os.IsNotExist(err) || stat.Size() == 0 {
-		os.Remove(TTSOutFilePath)
+		t.CleanupOutputFiles()
 		return nil, fmt.Errorf("output file not found: %s", TTSOutFilePath)
 	}
 
 	r, err := converter.ConvertToOpus(ctx, TTSOutFilePath)
 	if err != nil {
-		os.Remove(TTSOutFilePath)
+		t.CleanupOutputFiles()
 		return nil, err
 	}
 
