@@ -65,9 +65,11 @@ type AudioFileData struct {
 }
 
 func handleAudio(ctx context.Context, update *models.Update, fileID, filename string) {
-	if reqQueue.currentEntry.gotAudioChan == nil {
+	// Are we expecting audio data from this user?
+	if reqQueue.currentEntry.gotAudioChan == nil || update.Message.From.ID != reqQueue.currentEntry.entry.Message.From.ID {
 		return
 	}
+
 	var g GetFile
 	d, err := g.GetFile(ctx, fileID)
 	if err != nil {
