@@ -256,7 +256,7 @@ variable. Available OS environment variables are:
 - `/aaitts-models` - list text to speech models
 - `/aaistt` (-lang [language]) - speech to text
 - `/aaimdx` (-f) - music and voice separation (-f enables full output including instrument and bassline tracks)
-- `/aairvc` (-m [model]) (-p [pitch]) (-method [method]) (-filter-radius [v]) (-index-rate [v]) (-rms-mix-rate [v]) - retrieval based voice conversion
+- `/aairvc` (model) (-m [model]) (-p [pitch]) (-method [method]) (-filter-radius [v]) (-index-rate [v]) (-rms-mix-rate [v]) - retrieval based voice conversion
 - `/aairvc-models` - list rvc models
 - `/aaimusicgen` (-l [sec]) [prompt] - generate music based on given audio file and prompt
 - `/aaiaudiogen` (-l [sec]) [prompt] - generate audio
