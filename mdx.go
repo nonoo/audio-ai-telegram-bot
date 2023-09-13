@@ -22,7 +22,11 @@ var MDXOtherFilePath = os.TempDir() + "/mdx_other.wav"
 
 func (m *MDX) CleanupOutputFiles() {
 	os.Remove(MDXInstrumFilePath)
+	os.Remove(MDXInstrum2FilePath)
 	os.Remove(MDXVocalsFilePath)
+	os.Remove(MDXBassFilePath)
+	os.Remove(MDXDrumsFilePath)
+	os.Remove(MDXOtherFilePath)
 }
 
 func (m *MDX) MDX(ctx context.Context, reqParams ReqParamsMDX, audioData AudioFileData) ([]UploadFileData, error) {
