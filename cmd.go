@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os/exec"
 	"syscall"
@@ -101,4 +102,38 @@ func (c *Cmd) ParseOutput(doneChan chan bool, lineChan chan string, errChan chan
 		doneChan <- true
 	}()
 	return nil
+}
+
+func (c *Cmd) RunAndProcessOutput(processLineCallback func(string)) (canceled bool, err error) {
+	doneChan := make(chan bool)
+	defer close(doneChan)
+	lineChan := make(chan string)
+	defer close(lineChan)
+	errChan := make(chan error)
+	defer close(errChan)
+	err = c.ParseOutput(doneChan, lineChan, errChan)
+	if err != nil {
+		return false, fmt.Errorf("parse error: %w", err)
+	}
+	err = c.Start()
+	if err != nil {
+		return false, fmt.Errorf("start error: %w", err)
+	}
+
+selectForLoop:
+	for {
+		select {
+		case <-c.ctx.Done():
+			<-errChan
+			<-doneChan
+			return true, nil
+		case line := <-lineChan:
+			processLineCallback(line)
+		case err = <-errChan:
+			break selectForLoop
+		}
+	}
+	reqQueue.currentEntry.entry.cancelProcessUpdate()
+	<-doneChan
+	return false, err
 }

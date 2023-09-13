@@ -43,54 +43,30 @@ func (m *MDX) MDX(ctx context.Context, reqParams ReqParamsMDX, audioData AudioFi
 	cmd := NewCommand(ctx, params.MDXBin, args...)
 	cmd.Dir = path.Dir(params.MDXBin)
 
-	doneChan := make(chan bool)
-	defer close(doneChan)
-	lineChan := make(chan string)
-	defer close(lineChan)
-	errChan := make(chan error)
-	defer close(errChan)
-	err = cmd.ParseOutput(doneChan, lineChan, errChan)
-	if err != nil {
-		m.CleanupOutputFiles()
-		return nil, fmt.Errorf("MDX parse error: %w", err)
-	}
-	err = cmd.Start()
-	if err != nil {
-		m.CleanupOutputFiles()
-		return nil, fmt.Errorf("MDX start error: %w", err)
-	}
-
 	var lineBeforePercent string
 	var percent int
-selectForLoop:
-	for {
-		select {
-		case <-ctx.Done():
-			<-errChan
-			<-doneChan
-			m.CleanupOutputFiles()
-			return nil, nil
-		case line := <-lineChan:
-			re := regexp.MustCompile(`(\d+)%\|`)
-			match := re.FindStringSubmatch(line)
-			if len(match) > 1 && match[1] != "" {
-				percent, err = strconv.Atoi(match[1])
-				if err == nil {
-					fmt.Print("    progress: ", lineBeforePercent, " ", percent, "%\n")
-					reqQueue.currentEntry.entry.sendProcessUpdate(ctx, lineBeforePercent, percent)
-				}
-			} else {
-				if line != "" {
-					lineBeforePercent = line
-					reqQueue.currentEntry.entry.sendProcessUpdate(ctx, lineBeforePercent, percent)
-				}
+	canceled, err := cmd.RunAndProcessOutput(func(line string) {
+		re := regexp.MustCompile(`(\d+)%\|`)
+		match := re.FindStringSubmatch(line)
+		if len(match) > 1 && match[1] != "" {
+			percent, err = strconv.Atoi(match[1])
+			if err == nil {
+				fmt.Print("    progress: ", lineBeforePercent, " ", percent, "%\n")
+				reqQueue.currentEntry.entry.sendProcessUpdate(ctx, lineBeforePercent, percent)
 			}
-		case err = <-errChan:
-			break selectForLoop
+		} else {
+			if line != "" {
+				lineBeforePercent = line
+				reqQueue.currentEntry.entry.sendProcessUpdate(ctx, lineBeforePercent, percent)
+			}
 		}
+	})
+
+	if canceled {
+		m.CleanupOutputFiles()
+		return nil, nil
 	}
-	reqQueue.currentEntry.entry.cancelProcessUpdate()
-	<-doneChan
+
 	if err != nil {
 		m.CleanupOutputFiles()
 		return nil, fmt.Errorf("MDX run error: %w", err)
