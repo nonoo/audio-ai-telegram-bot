@@ -190,7 +190,7 @@ func telegramBotUpdateHandler(ctx context.Context, b *bot.Bot, update *models.Up
 		handleAudio(ctx, update, update.Message.Voice.FileID, "voice.ogg")
 	} else if update.Message.Audio != nil {
 		handleAudio(ctx, update, update.Message.Audio.FileID, update.Message.Audio.FileName)
-	} else if update.Message != nil && update.Message.Text != "" {
+	} else if update.Message.Text != "" {
 		handleMessage(ctx, update)
 	}
 }
