@@ -19,7 +19,7 @@ type RVC struct {
 var RVCInFilePath = os.TempDir() + "/rvc-in.wav"
 var RVCOutFilePath = os.TempDir() + "/rvc-out.wav"
 
-func (t *RVC) ListModels(ctx context.Context, msg *models.Message) {
+func (t *RVC) GetModels() ([]string, error) {
 	var models []string
 	err := filepath.Walk(params.RVCModelPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -30,6 +30,11 @@ func (t *RVC) ListModels(ctx context.Context, msg *models.Message) {
 		}
 		return nil
 	})
+	return models, err
+}
+
+func (t *RVC) ListModels(ctx context.Context, msg *models.Message) {
+	models, err := rvc.GetModels()
 	if err != nil {
 		sendReplyToMessage(ctx, msg, errorStr+": can't list models: "+err.Error())
 		return
