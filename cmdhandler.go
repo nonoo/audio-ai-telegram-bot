@@ -69,10 +69,10 @@ func (c *cmdHandlerType) MDX(ctx context.Context, msg *models.Message) {
 	reqQueue.Add(req)
 }
 
-func (c *cmdHandlerType) RVC(ctx context.Context, msg *models.Message) {
+func (c *cmdHandlerType) RVC(ctx context.Context, prompt string, msg *models.Message) {
 	reqParams := ReqParamsRVC{
 		Method:       "harvest",
-		Model:        msg.Text,
+		Model:        prompt,
 		FilterRadius: 3,
 	}
 

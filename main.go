@@ -132,7 +132,7 @@ func handleMessage(ctx context.Context, update *models.Update) {
 			return
 		case "aairvc":
 			fmt.Println("  interpreting as cmd rvc")
-			cmdHandler.RVC(ctx, update.Message)
+			cmdHandler.RVC(ctx, strings.Replace(update.Message.Text, cmdChar+"aairvc", "", 1), update.Message)
 			return
 		case "aairvc-train":
 			fmt.Println("  interpreting as cmd rvc-train")
