@@ -45,12 +45,7 @@ bot's `token`.
   the `tts` command is available.
 
 - Create a shell script in the Coqui AI directory with the following contents:
-
-```bash
-#!/bin/bash
-tts "$@" --text "`cat`"
-```
-
+- Copy the `scripts/tts.sh` shell script to the repo directory
 - Set this shell script as the TTS binary for the bot using the `-tts-bin` command
   line argument.
 
@@ -58,13 +53,7 @@ tts "$@" --text "`cat`"
 
 - Follor the [installation steps](https://github.com/openai/whisper) and make sure
   the `whisper` command is available.
-- Create a shell script in the Whisper directory with the following contents:
-
-```bash
-#!/bin/bash
-env/bin/whisper --model large-v2 --model_dir . --output_format txt --output_dir /tmp "$@"
-```
-
+- Copy the `scripts/whisper.sh` shell script to the repo directory
 - Set this shell script as the STT binary for the bot using the `-stt-bin` command
   line argument.
 
@@ -74,14 +63,7 @@ env/bin/whisper --model large-v2 --model_dir . --output_format txt --output_dir 
 - Enter into the cloned directory
 - `python3 -m venv env`
 - `pip install -r requirements.txt`
-- Create a shell script in the repo directory with the following contents:
-
-```bash
-#!/bin/bash
-. env/bin/activate
-python inference.py $*
-```
-
+- Copy the `scripts/mdx.sh` shell script to the repo directory
 - Set this shell script as the MDX binary for the bot using the `-mdx-bin` command
   line argument.
 
@@ -91,14 +73,7 @@ python inference.py $*
 - Enter into the cloned directory
 - `python3 -m venv env`
 - `pip install -r requirements.txt`
-- Create a shell script in the repo directory with the following contents:
-
-```bash
-#!/bin/bash
-. env/bin/activate
-python tools/infer_cli.py $*
-```
-
+- Copy the `scripts/rvc.sh` shell script to the repo directory
 - Set this shell script as the RVC binary for the bot using the `-rvc-bin` command
   line argument.
 - Set the RVC model path directory using the `-rvc-model-path` command line argument.
