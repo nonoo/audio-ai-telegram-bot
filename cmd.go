@@ -79,7 +79,16 @@ func (c *Cmd) ParseOutput(doneChan chan bool, lineChan chan string, errChan chan
 	c.Stderr = c.Stdout
 	go func() {
 		lineParser := &lineParser{lineChan: lineChan}
-		parser := vtparser.New(lineParser.Print, lineParser.Execute, nil, nil, nil, nil, nil, nil)
+
+		// Dummy callbacks.
+		putCallback := func(b byte) {}
+		unhookCallback := func() {}
+		hookCallback := func(params []int64, intermediates []byte, ignore bool, r rune) {}
+		oscCallback := func(params [][]byte, bellTerminated bool) {}
+		csiCallback := func(params []int64, intermediates []byte, ignore bool, r rune) {}
+		escCallback := func(intermediates []byte, ignore bool, b byte) {}
+
+		parser := vtparser.New(lineParser.Print, lineParser.Execute, putCallback, unhookCallback, hookCallback, oscCallback, csiCallback, escCallback)
 		buf := make([]byte, 1)
 		var err error
 	cycle:

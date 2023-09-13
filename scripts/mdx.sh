@@ -1,3 +1,3 @@
 #!/bin/bash
 . env/bin/activate
-python inference.py $*
+python -u inference.py $*

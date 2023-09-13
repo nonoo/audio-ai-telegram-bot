@@ -1,3 +1,3 @@
 #!/bin/bash
 . venv/bin/activate
-python rvc-train.py "$@"
+python -u rvc-train.py "$@"

@@ -348,8 +348,29 @@ func (q *ReqQueue) processor() {
 		var audioData AudioFileData
 		audioNeededFirst := false
 		switch q.currentEntry.entry.Req.Type {
-		case ReqTypeSTT, ReqTypeMDX, ReqTypeRVC, ReqTypeRVCTrain, ReqTypeMusicgen:
+		case ReqTypeSTT, ReqTypeMDX, ReqTypeMusicgen:
 			audioNeededFirst = true
+		case ReqTypeRVC:
+			if !rvc.ModelExists(q.currentEntry.entry.Req.Params.(ReqParamsRVC).Model) {
+				err = fmt.Errorf("model does not exist")
+			} else {
+				audioNeededFirst = true
+			}
+		case ReqTypeRVCTrain:
+			reqParams := q.currentEntry.entry.Req.Params.(ReqParamsRVCTrain)
+			modelExists := rvc.ModelExists(reqParams.Model)
+			if reqParams.Delete {
+				if !modelExists {
+					err = fmt.Errorf("model does not exist")
+				}
+			} else {
+				if modelExists {
+					err = fmt.Errorf("model already exists, delete it first")
+				}
+			}
+			if err == nil {
+				audioNeededFirst = true
+			}
 		}
 		if audioNeededFirst {
 			fmt.Println("  waiting for audio file...")

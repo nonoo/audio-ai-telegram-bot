@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strings"
 
 	"github.com/go-telegram/bot/models"
 )
@@ -86,6 +87,8 @@ func (c *cmdHandlerType) RVC(ctx context.Context, prompt string, msg *models.Mes
 		return
 	}
 
+	reqParams.Model = strings.Trim(reqParams.Model, " ")
+
 	if reqParams.Model == "" {
 		sendReplyToMessage(ctx, msg, errorStr+": no model given")
 		return
@@ -99,16 +102,12 @@ func (c *cmdHandlerType) RVC(ctx context.Context, prompt string, msg *models.Mes
 	reqQueue.Add(req)
 }
 
-func (c *cmdHandlerType) RVCTrain(ctx context.Context, msg *models.Message) {
+func (c *cmdHandlerType) RVCTrain(ctx context.Context, prompt string, msg *models.Message) {
 	reqParams := ReqParamsRVCTrain{
 		Method:    "harvest",
-		Model:     msg.Text,
+		Model:     prompt,
 		BatchSize: params.RVCTrainDefaultBatchSize,
 		Epochs:    params.RVCTrainDefaultEpochs,
-	}
-
-	if reqParams.Model == "" {
-		reqParams.Model = params.RVCDefaultModel
 	}
 
 	_, err := ReqParamsParse(ctx, msg.Text, &reqParams)
@@ -117,13 +116,15 @@ func (c *cmdHandlerType) RVCTrain(ctx context.Context, msg *models.Message) {
 		return
 	}
 
+	reqParams.Model = strings.Trim(reqParams.Model, " ")
+
 	if reqParams.Model == "" {
 		sendReplyToMessage(ctx, msg, errorStr+": no model given")
 		return
 	}
 
 	req := ReqQueueReq{
-		Type:    ReqTypeRVC,
+		Type:    ReqTypeRVCTrain,
 		Message: msg,
 		Params:  reqParams,
 	}
