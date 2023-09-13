@@ -33,6 +33,7 @@ const (
 	ReqTypeSTT
 	ReqTypeMDX
 	ReqTypeRVC
+	ReqTypeRVCTrain
 	ReqTypeMusicgen
 	ReqTypeAudiogen
 )
@@ -268,6 +269,23 @@ func (q *ReqQueue) processQueueEntry(processCtx context.Context, qEntry *ReqQueu
 		}
 
 		q.currentEntry.entry.sendUpdate(q.ctx, doneStr)
+	case ReqTypeRVCTrain:
+		reqParams := qEntry.Req.Params.(ReqParamsRVCTrain)
+		if reqParams.Delete {
+			err := rvc.DeleteModel(reqParams.Model)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := rvc.Train(processCtx, reqParams, audioData)
+			if err != nil {
+				return err
+			}
+
+			defer rvc.TrainCleanupOutputFiles(reqParams.Model)
+		}
+
+		q.currentEntry.entry.sendUpdate(q.ctx, doneStr)
 	case ReqTypeMusicgen:
 		file, err := musicgen.Musicgen(processCtx, qEntry.Req.Params.(ReqParamsMusicgen), qEntry.Req.Prompt, audioData)
 		if err != nil {
@@ -330,7 +348,7 @@ func (q *ReqQueue) processor() {
 		var audioData AudioFileData
 		audioNeededFirst := false
 		switch q.currentEntry.entry.Req.Type {
-		case ReqTypeSTT, ReqTypeMDX, ReqTypeRVC, ReqTypeMusicgen:
+		case ReqTypeSTT, ReqTypeMDX, ReqTypeRVC, ReqTypeRVCTrain, ReqTypeMusicgen:
 			audioNeededFirst = true
 		}
 		if audioNeededFirst {

@@ -70,6 +70,19 @@ func (r ReqParamsRVC) String() string {
 	return strings.Join(args, " ")
 }
 
+type ReqParamsRVCTrain struct {
+	Model     string
+	Method    string
+	BatchSize int
+	Epochs    int
+	Delete    bool
+}
+
+func (r ReqParamsRVCTrain) String() string {
+	return "🤡 " + r.Model + " 🎹 Method: " + r.Method + " Batch size: " + fmt.Sprint(r.BatchSize) +
+		" Epochs: " + fmt.Sprint(r.Epochs)
+}
+
 type ReqParamsMusicgen struct {
 	LengthSec    int
 	LengthSecSet bool
@@ -106,6 +119,7 @@ func ReqParamsParse(ctx context.Context, s string, reqParams ReqParams) (prompt 
 	var reqParamsSTT *ReqParamsSTT
 	var reqParamsMDX *ReqParamsMDX
 	var reqParamsRVC *ReqParamsRVC
+	var reqParamsRVCTrain *ReqParamsRVCTrain
 	var reqParamsMusicgen *ReqParamsMusicgen
 	var reqParamsAudiogen *ReqParamsAudiogen
 	switch v := reqParams.(type) {
@@ -117,6 +131,8 @@ func ReqParamsParse(ctx context.Context, s string, reqParams ReqParams) (prompt 
 		reqParamsMDX = v
 	case *ReqParamsRVC:
 		reqParamsRVC = v
+	case *ReqParamsRVCTrain:
+		reqParamsRVCTrain = v
 	case *ReqParamsMusicgen:
 		reqParamsMusicgen = v
 	case *ReqParamsAudiogen:
@@ -147,7 +163,7 @@ func ReqParamsParse(ctx context.Context, s string, reqParams ReqParams) (prompt 
 
 		switch attr {
 		case "model", "m":
-			if reqParamsTTS == nil && reqParamsRVC == nil {
+			if reqParamsTTS == nil && reqParamsRVC == nil && reqParamsRVCTrain == nil {
 				break
 			}
 			val, lexErr := lexer.Next()
@@ -158,6 +174,8 @@ func ReqParamsParse(ctx context.Context, s string, reqParams ReqParams) (prompt 
 				reqParamsTTS.Model = val
 			} else if reqParamsRVC != nil {
 				reqParamsRVC.Model = val
+			} else if reqParamsRVCTrain != nil {
+				reqParamsRVCTrain.Model = val
 			}
 			fmt.Println("model:", val)
 			validAttr = true
@@ -192,14 +210,18 @@ func ReqParamsParse(ctx context.Context, s string, reqParams ReqParams) (prompt 
 			reqParamsRVC.PitchSet = true
 			validAttr = true
 		case "method":
-			if reqParamsRVC == nil {
+			if reqParamsRVC == nil && reqParamsRVCTrain == nil {
 				break
 			}
 			val, lexErr := lexer.Next()
 			if lexErr != nil {
 				return "", fmt.Errorf(attr + " is missing value")
 			}
-			reqParamsRVC.Method = val
+			if reqParamsRVC != nil {
+				reqParamsRVC.Method = val
+			} else if reqParamsRVCTrain != nil {
+				reqParamsRVCTrain.Method = val
+			}
 			validAttr = true
 		case "filter-radius":
 			if reqParamsRVC == nil {
@@ -261,6 +283,38 @@ func ReqParamsParse(ctx context.Context, s string, reqParams ReqParams) (prompt 
 			if err != nil {
 				return "", fmt.Errorf("invalid length value")
 			}
+			validAttr = true
+		case "batch-size":
+			if reqParamsRVCTrain == nil {
+				break
+			}
+			val, lexErr := lexer.Next()
+			if lexErr != nil {
+				return "", fmt.Errorf(attr + " is missing value")
+			}
+			reqParamsRVCTrain.BatchSize, err = strconv.Atoi(val)
+			if err != nil {
+				return "", fmt.Errorf("invalid batch size value")
+			}
+			validAttr = true
+		case "epochs":
+			if reqParamsRVCTrain == nil {
+				break
+			}
+			val, lexErr := lexer.Next()
+			if lexErr != nil {
+				return "", fmt.Errorf(attr + " is missing value")
+			}
+			reqParamsRVCTrain.Epochs, err = strconv.Atoi(val)
+			if err != nil {
+				return "", fmt.Errorf("invalid epochs value")
+			}
+			validAttr = true
+		case "delete":
+			if reqParamsRVCTrain == nil {
+				break
+			}
+			reqParamsRVCTrain.Delete = true
 			validAttr = true
 		}
 

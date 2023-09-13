@@ -6,6 +6,7 @@ This is a Telegram Bot frontend for processing audio with several AI tools:
 - [Whisper](https://github.com/openai/whisper) for speech to text
 - [MDX23v2](https://github.com/ZFTurbo/MVSEP-MDX23-music-separation-model) for music separation
 - [RVC WebUI](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI) for retrieval based voice conversion
+- [Audio WebUI](https://github.com/gitmylo/audio-webui) for retrieval based voice conversion training
 - [AudioCraft](https://github.com/facebookresearch/audiocraft) for generating music and audio
 
 <p align="center"><img src="demo.gif?raw=true"/></p>
@@ -103,6 +104,14 @@ python tools/infer_cli.py $*
 - Set the RVC model path directory using the `-rvc-model-path` command line argument.
   This is usually located at `rvc/assets/weights`
 
+### Audio WebUI
+
+- Clone the [Audio WebUI](https://github.com/gitmylo/audio-webui) repo
+- Follow the [installation instructions](https://github.com/gitmylo/audio-webui#-installing)
+- Copy the `scripts/rvc-train.py` and `scripts/rvc-train.sh` to the Audio WebUI directory
+- Set the `rvc-train.sh` shell script as the RVC train binary for the bot using the
+  `-rvc-train-bin` command line argument.
+
 ### AudioCraft
 
 - Follow the [installation steps]([AudioCraft](https://github.com/facebookresearch/audiocraft))
@@ -155,6 +164,9 @@ variable. Available OS environment variables are:
 - `RVC_BIN`
 - `RVC_MODEL_PATH`
 - `RVC_DEFAULT_MODEL`
+- `RVC_TRAIN_BIN`
+- `RVC_TRAIN_DEFAULT_BATCH_SIZE`
+- `RVC_TRAIN_DEFAULT_EPOCHS`
 - `MUSICGEN_BIN`
 - `AUDIOGEN_BIN`
 
@@ -165,6 +177,7 @@ variable. Available OS environment variables are:
 - `/aaistt` (-lang [language]) - speech to text
 - `/aaimdx` (-f) - music and voice separation (-f enables full output including instrument and bassline tracks)
 - `/aairvc` (model) (-m [model]) (-p [pitch]) (-method [method]) (-filter-radius [v]) (-index-rate [v]) (-rms-mix-rate [v]) - retrieval based voice conversion
+- `/aairvc-train` (model) (-m [model]) (-method [method]) (-batch-size [v]) (-epochs [v]) (-delete) - retrieval based voice conversion training
 - `/aairvc-models` - list rvc models
 - `/aaimusicgen` (-l [sec]) [prompt] - generate music based on given audio file and prompt
 - `/aaiaudiogen` (-l [sec]) [prompt] - generate audio

@@ -99,6 +99,37 @@ func (c *cmdHandlerType) RVC(ctx context.Context, msg *models.Message) {
 	reqQueue.Add(req)
 }
 
+func (c *cmdHandlerType) RVCTrain(ctx context.Context, msg *models.Message) {
+	reqParams := ReqParamsRVCTrain{
+		Method:    "harvest",
+		Model:     msg.Text,
+		BatchSize: params.RVCTrainDefaultBatchSize,
+		Epochs:    params.RVCTrainDefaultEpochs,
+	}
+
+	if reqParams.Model == "" {
+		reqParams.Model = params.RVCDefaultModel
+	}
+
+	_, err := ReqParamsParse(ctx, msg.Text, &reqParams)
+	if err != nil {
+		sendReplyToMessage(ctx, msg, errorStr+": can't parse params: "+err.Error())
+		return
+	}
+
+	if reqParams.Model == "" {
+		sendReplyToMessage(ctx, msg, errorStr+": no model given")
+		return
+	}
+
+	req := ReqQueueReq{
+		Type:    ReqTypeRVC,
+		Message: msg,
+		Params:  reqParams,
+	}
+	reqQueue.Add(req)
+}
+
 func (c *cmdHandlerType) Musicgen(ctx context.Context, prompt string, msg *models.Message) {
 	reqParams := ReqParamsMusicgen{}
 	var err error
@@ -159,6 +190,7 @@ func (c *cmdHandlerType) Help(ctx context.Context, msg *models.Message, cmdChar 
 		cmdChar+"aaistt (-lang [language]) - speech to text\n"+
 		cmdChar+"aaimdx (-f) - music and voice separation (-f enables full output including instrument and bassline tracks)\n"+
 		cmdChar+"aairvc (model) (-m [model]) (-p [pitch]) (-method [method]) (-filter-radius [v]) (-index-rate [v]) (-rms-mix-rate [v]) - retrieval based voice conversion\n"+
+		cmdChar+"aairvc-train (model) (-m [model]) (-method [method]) (-batch-size [v]) (-epochs [v]) (-delete) - retrieval based voice conversion training\n"+
 		cmdChar+"aairvc-models - list rvc models\n"+
 		cmdChar+"aaimusicgen (-l [sec]) [prompt] - generate music based on given audio file and prompt\n"+
 		cmdChar+"aaiaudiogen (-l [sec]) [prompt] - generate audio\n"+

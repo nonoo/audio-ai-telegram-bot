@@ -28,6 +28,10 @@ type paramsType struct {
 	RVCModelPath    string
 	RVCDefaultModel string
 
+	RVCTrainBin              string
+	RVCTrainDefaultBatchSize int
+	RVCTrainDefaultEpochs    int
+
 	MusicgenBin string
 
 	AudiogenBin string
@@ -50,6 +54,9 @@ func (p *paramsType) Init() error {
 	flag.StringVar(&p.RVCBin, "rvc-bin", "", "path to the rvc binary")
 	flag.StringVar(&p.RVCModelPath, "rvc-model-path", "", "path to the rvc weights directory")
 	flag.StringVar(&p.RVCDefaultModel, "rvc-default-model", "", "default rvc model")
+	flag.StringVar(&p.RVCTrainBin, "rvc-train-bin", "", "path to the rvc train binary")
+	flag.IntVar(&p.RVCTrainDefaultBatchSize, "rvc-train-default-batch-size", 0, "default rvc train batch size")
+	flag.IntVar(&p.RVCTrainDefaultEpochs, "rvc-train-default-epochs", 0, "default rvc train epochs")
 	flag.StringVar(&p.MusicgenBin, "musicgen-bin", "", "path to the musicgen binary")
 	flag.StringVar(&p.AudiogenBin, "audiogen-bin", "", "path to the audiogen binary")
 	flag.Parse()
@@ -128,13 +135,21 @@ func (p *paramsType) Init() error {
 	if p.RVCBin == "" {
 		p.RVCBin = os.Getenv("RVC_BIN")
 	}
-
 	if p.RVCModelPath == "" {
 		p.RVCModelPath = os.Getenv("RVC_MODEL_PATH")
 	}
-
 	if p.RVCDefaultModel == "" {
 		p.RVCDefaultModel = os.Getenv("RVC_DEFAULT_MODEL")
+	}
+
+	if p.RVCTrainBin == "" {
+		p.RVCTrainBin = os.Getenv("RVC_TRAIN_BIN")
+	}
+	if p.RVCTrainDefaultBatchSize == 0 {
+		p.RVCTrainDefaultBatchSize, _ = strconv.Atoi(os.Getenv("RVC_TRAIN_DEFAULT_BATCH_SIZE"))
+	}
+	if p.RVCTrainDefaultEpochs == 0 {
+		p.RVCTrainDefaultEpochs, _ = strconv.Atoi(os.Getenv("RVC_TRAIN_DEFAULT_EPOCHS"))
 	}
 
 	if p.MusicgenBin == "" {

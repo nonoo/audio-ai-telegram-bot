@@ -33,6 +33,39 @@ func (t *RVC) GetModels() ([]string, error) {
 	return models, err
 }
 
+func (t *RVC) GetModelPaths(modelName string) (modelFilename, modelPath, indexPath string, err error) {
+	modelFilename = modelName
+	if !strings.HasSuffix(modelFilename, ".pth") {
+		modelFilename += ".pth"
+	}
+	modelPath = path.Join(params.RVCModelPath, modelFilename)
+	if _, err := os.Stat(modelPath); os.IsNotExist(err) {
+		return "", "", "", fmt.Errorf("model %s not found", modelName)
+	}
+
+	indexFilename := fileNameWithoutExt(modelFilename) + "_added.index"
+	indexPath = path.Join(params.RVCModelPath, indexFilename)
+	if _, err := os.Stat(indexPath); os.IsNotExist(err) {
+		return "", "", "", fmt.Errorf("index not found: %s", indexPath)
+	}
+	return
+}
+
+func (t *RVC) DeleteModel(modelName string) error {
+	_, modelPath, indexPath, err := rvc.GetModelPaths(modelName)
+	if err != nil {
+		return err
+	}
+
+	if err := os.Remove(modelPath); err != nil {
+		return err
+	}
+	if err := os.Remove(indexPath); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (t *RVC) ListModels(ctx context.Context, msg *models.Message) {
 	models, err := rvc.GetModels()
 	if err != nil {
@@ -56,19 +89,9 @@ func (t *RVC) RVC(ctx context.Context, reqParams ReqParamsRVC, audioData AudioFi
 		return nil, fmt.Errorf("can't write rvc input file: %w", err)
 	}
 
-	modelFilename := reqParams.Model
-	if !strings.HasSuffix(modelFilename, ".pth") {
-		modelFilename += ".pth"
-	}
-	modelPath := path.Join(params.RVCModelPath, modelFilename)
-	if _, err := os.Stat(modelPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("model %s not found", reqParams.Model)
-	}
-
-	indexFilename := fileNameWithoutExt(modelFilename) + "_added.index"
-	indexPath := path.Join(params.RVCModelPath, indexFilename)
-	if _, err := os.Stat(indexPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("index not found: %s", indexPath)
+	modelFilename, _, indexPath, err := rvc.GetModelPaths(reqParams.Model)
+	if err != nil {
+		return nil, err
 	}
 
 	args := []string{"--input_path", RVCInFilePath, "--model_name", modelFilename,
@@ -106,4 +129,43 @@ func (t *RVC) RVC(ctx context.Context, reqParams ReqParamsRVC, audioData AudioFi
 	}
 
 	return r, nil
+}
+
+func (t *RVC) TrainCleanupOutputFiles(modelName string) {
+	os.RemoveAll(path.Join(path.Dir(params.RVCTrainBin), "data", "training", "RVC", modelName))
+	_ = rvc.DeleteModel(modelName)
+}
+
+func (t *RVC) Train(ctx context.Context, reqParams ReqParamsRVCTrain, audioData AudioFileData) error {
+	_, _, _, err := rvc.GetModelPaths(reqParams.Model)
+	if err == nil {
+		return fmt.Errorf("model %s already exists", reqParams.Model)
+	}
+
+	rvc.TrainCleanupOutputFiles(reqParams.Model)
+
+	trainDataDir, err := os.MkdirTemp("", "rvc-train")
+	if err != nil {
+		rvc.TrainCleanupOutputFiles(reqParams.Model)
+		return fmt.Errorf("can't create directory for training data: %w", err)
+	}
+	defer os.RemoveAll(trainDataDir)
+
+	err = os.WriteFile(path.Join(trainDataDir, "in.wav"), audioData.data, 0644)
+	if err != nil {
+		rvc.TrainCleanupOutputFiles(reqParams.Model)
+		return fmt.Errorf("can't write rvc train input file: %w", err)
+	}
+
+	cmd := NewCommand(ctx, params.RVCTrainBin, "--model", reqParams.Model, "--src_dir", trainDataDir,
+		"--alg", reqParams.Method, "--batch_size", strconv.Itoa(reqParams.BatchSize),
+		"--epochs", strconv.Itoa(reqParams.Epochs))
+	cmd.Dir = path.Dir(params.RVCTrainBin)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		rvc.TrainCleanupOutputFiles(reqParams.Model)
+		return fmt.Errorf("RVC train error: %w: %s", err, string(output))
+	}
+
+	return nil
 }

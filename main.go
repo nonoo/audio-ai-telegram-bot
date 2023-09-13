@@ -134,6 +134,10 @@ func handleMessage(ctx context.Context, update *models.Update) {
 			fmt.Println("  interpreting as cmd rvc")
 			cmdHandler.RVC(ctx, update.Message)
 			return
+		case "aairvc-train":
+			fmt.Println("  interpreting as cmd rvc-train")
+			cmdHandler.RVCTrain(ctx, update.Message)
+			return
 		case "aairvc-models":
 			fmt.Println("  interpreting as cmd rvc")
 			rvc.ListModels(ctx, update.Message)
